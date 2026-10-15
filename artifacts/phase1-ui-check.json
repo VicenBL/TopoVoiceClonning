@@ -1,0 +1,212 @@
+{
+  "passed": 41,
+  "total": 41,
+  "screenshots": 16,
+  "results": [
+    {
+      "name": "Eight navigation destinations",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "Demo scope is explicit",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "Voice availability stays synchronized",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "Active voice version stays synchronized",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "Clone screen is present",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "Clone form follows engine capabilities",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "Unsaved clone candidate is tested independently of the active version",
+      "passed": true,
+      "detail": "{\"candidateJob\":{\"id\":\"JOB-2045A57F\",\"order\":7,\"request\":{\"id\":\"REQ-JOB-2045A57F\",\"origin\":\"Clonación demo\",\"voiceId\":\"voice-topota\",\"versionId\":\"candidate-voice-topota-1792067403259\",\"engineId\":\"local-a\",\"originalText\":\"CANDIDATA NUEVA ¿¿¿???---!!!\",\"emotionalMode\":\"literal\",\"emotionalDirectorEnabled\":true,\"createdAt\":\"2026-10-15T12:30:03.260Z\",\"engineParameters\":{\"pitch\":0,\"denoise\":true},\"emotionalProfileId\":\"balanced\"},\"status\":\"completed\",\"snapshot\":{\"voiceName\":\"Topota\",\"versionLabel\":\"Candidata sin guardar\",\"versionEngineId\":\"local-a\",\"engineName\":\"Motor local A — demo\",\"productionEngineId\":\"fish-sim\",\"activeVersionIdAtStart\":\"topota-v3\",\"emotionalMode\":\"literal\",\"emotionalDirectorEnabled\":true,\"engineParameters\":{\"pitch\":0,\"denoise\":true},\"emotionalProfileId\":\"balanced\",\"compatibility\":\"compatible\"},\"events\":[{\"id\":\"evt-JOB-2045A57F-queued\",\"jobId\":\"JOB-2045A57F\",\"at\":\"2026-10-15T12:30:03.260Z\",\"stage\":\"Recepción\",\"summary\":\"Solicitud demo recibida y colocada al final de la cola\",\"technicalDetail\":\"Evento simulado. No se invocó ningún servicio real.\",\"level\":\"info\",\"simulated\":true},{\"id\":\"evt-JOB-2045A57F-proc\",\"jobId\":\"JOB-2045A57F\",\"at\":\"2026-10-15T12:30:03.608Z\",\"stage\":\"Procesamiento\",\"summary\":\"Procesamiento demo iniciado respetando el orden de cola\",\"technicalDetail\":\"Estado simulado. Sólo se procesa un trabajo a la vez.\",\"level\":\"info\",\"simulated\":true},{\"id\":\"evt-JOB-2045A57F-ok\",\"jobId\":\"JOB-2045A57F\",\"at\":\"2026-10-15T12:30:05.020Z\",\"stage\":\"Finalización\",\"summary\":\"Generación simulada completada\",\"technicalDetail\":\"No se creó audio real ni se llamó a un motor TTS.\",\"level\":\"info\",\"simulated\":true}],\"startedAt\":\"2026-10-15T12:30:03.608Z\",\"completedAt\":\"2026-10-15T12:30:05.020Z\",\"result\":{\"durationSec\":2.1,\"processingMs\":2818,\"demoAudioLabel\":\"Audio de prueba simulado\"}},\"candidateFeedback\":\"Prueba añadida a la cola · candidata sin guardar · texto conservado: CANDIDATA NUEVA ¿¿¿???---!!!\"}"
+    },
+    {
+      "name": "New version preserves previous versions",
+      "passed": true,
+      "detail": "versions=4"
+    },
+    {
+      "name": "New version is not activated automatically",
+      "passed": true,
+      "detail": "active=topota-v3"
+    },
+    {
+      "name": "Exact original text is preserved",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "Simulated generation reaches completion",
+      "passed": true,
+      "detail": "status=completed"
+    },
+    {
+      "name": "Queue processes at most one job",
+      "passed": true,
+      "detail": "{\"processing\":1,\"queued\":1,\"pair\":[{\"id\":\"JOB-50598154\",\"order\":10,\"request\":{\"id\":\"REQ-JOB-50598154\",\"origin\":\"Laboratorio TTS\",\"voiceId\":\"voice-dumbledore\",\"versionId\":\"dumbledore-v1\",\"engineId\":\"local-a\",\"originalText\":\"AAAAA---éééé%%%%\\nJAJAJAJAaaaáááá\\n¿¿¿???---!!!\",\"emotionalMode\":\"creative\",\"emotionalDirectorEnabled\":false,\"createdAt\":\"2026-10-15T12:30:07.567Z\",\"engineParameters\":{\"pitch\":0,\"denoise\":true},\"emotionalProfileId\":\"balanced\",\"comparisonSide\":\"B\",\"comparisonId\":\"CMP-158DB623\"},\"status\":\"queued\",\"snapshot\":{\"voiceName\":\"Dumbledore\",\"versionLabel\":\"v1\",\"versionEngineId\":\"fish-sim\",\"engineName\":\"Motor local A — demo\",\"productionEngineId\":\"fish-sim\",\"activeVersionIdAtStart\":\"dumbledore-v1\",\"emotionalMode\":\"creative\",\"emotionalDirectorEnabled\":false,\"engineParameters\":{\"pitch\":0,\"denoise\":true},\"emotionalProfileId\":\"balanced\",\"compatibility\":\"different_provider\"},\"events\":[{\"id\":\"evt-JOB-50598154-queued\",\"jobId\":\"JOB-50598154\",\"at\":\"2026-10-15T12:30:07.567Z\",\"stage\":\"Recepción\",\"summary\":\"Solicitud demo recibida y colocada al final de la cola\",\"technicalDetail\":\"Evento simulado. No se invocó ningún servicio real.\",\"level\":\"info\",\"simulated\":true}]},{\"id\":\"JOB-44242692\",\"order\":9,\"request\":{\"id\":\"REQ-JOB-44242692\",\"origin\":\"Laboratorio TTS\",\"voiceId\":\"voice-topota\",\"versionId\":\"topota-v2\",\"engineId\":\"fish-sim\",\"originalText\":\"AAAAA---éééé%%%%\\nJAJAJAJAaaaáááá\\n¿¿¿???---!!!\",\"emotionalMode\":\"literal\",\"emotionalDirectorEnabled\":true,\"createdAt\":\"2026-10-15T12:30:07.567Z\",\"engineParameters\":{\"speed\":1,\"intensity\":60},\"emotionalProfileId\":\"balanced\",\"comparisonSide\":\"A\",\"comparisonId\":\"CMP-158DB623\"},\"status\":\"processing\",\"snapshot\":{\"voiceName\":\"Topota\",\"versionLabel\":\"v2\",\"versionEngineId\":\"fish-sim\",\"engineName\":\"Fish Audio — demo\",\"productionEngineId\":\"fish-sim\",\"activeVersionIdAtStart\":\"topota-v3\",\"emotionalMode\":\"literal\",\"emotionalDirectorEnabled\":true,\"engineParameters\":{\"speed\":1,\"intensity\":60},\"emotionalProfileId\":\"balanced\",\"compatibility\":\"compatible\"},\"events\":[{\"id\":\"evt-JOB-44242692-queued\",\"jobId\":\"JOB-44242692\",\"at\":\"2026-10-15T12:30:07.567Z\",\"stage\":\"Recepción\",\"summary\":\"Solicitud demo recibida y colocada al final de la cola\",\"technicalDetail\":\"Evento simulado. No se invocó ningún servicio real.\",\"level\":\"info\",\"simulated\":true},{\"id\":\"evt-JOB-44242692-proc\",\"jobId\":\"JOB-44242692\",\"at\":\"2026-10-15T12:30:07.917Z\",\"stage\":\"Procesamiento\",\"summary\":\"Procesamiento demo iniciado respetando el orden de cola\",\"technicalDetail\":\"Estado simulado. Sólo se procesa un trabajo a la vez.\",\"level\":\"info\",\"simulated\":true}],\"startedAt\":\"2026-10-15T12:30:07.917Z\"}]}"
+    },
+    {
+      "name": "A/B pair shares text and comparison identity",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "Error opens an operation-specific diagnostic",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "Modal exposes accessible dialog semantics",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "Escape closes the diagnostic",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "Production engine change warns about incompatibilities",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "Director settings are captured by the job",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "General settings persist after reload",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "Disabled auto-start keeps service stopped",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "Enabled auto-start activates simulated service on reopen",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "History includes date filter",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "History contains every required demo error category",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "Independent acceptance regressions",
+      "passed": true,
+      "detail": ""
+    },
+    {
+      "name": "Producción desktop layout remains reachable",
+      "passed": true,
+      "detail": "{\"bodyWidth\":1920,\"viewport\":1920,\"active\":true,\"title\":\"Producción\"}"
+    },
+    {
+      "name": "Producción reduced layout remains reachable",
+      "passed": true,
+      "detail": "{\"bodyWidth\":1009,\"viewport\":1024,\"active\":true,\"title\":\"Producción\"}"
+    },
+    {
+      "name": "Biblioteca de voces desktop layout remains reachable",
+      "passed": true,
+      "detail": "{\"bodyWidth\":1920,\"viewport\":1920,\"active\":true,\"title\":\"Biblioteca de voces\"}"
+    },
+    {
+      "name": "Biblioteca de voces reduced layout remains reachable",
+      "passed": true,
+      "detail": "{\"bodyWidth\":1009,\"viewport\":1024,\"active\":true,\"title\":\"Biblioteca de voces\"}"
+    },
+    {
+      "name": "Clonar voz desktop layout remains reachable",
+      "passed": true,
+      "detail": "{\"bodyWidth\":1920,\"viewport\":1920,\"active\":true,\"title\":\"Clonar voz\"}"
+    },
+    {
+      "name": "Clonar voz reduced layout remains reachable",
+      "passed": true,
+      "detail": "{\"bodyWidth\":1009,\"viewport\":1024,\"active\":true,\"title\":\"Clonar voz\"}"
+    },
+    {
+      "name": "Generación TTS desktop layout remains reachable",
+      "passed": true,
+      "detail": "{\"bodyWidth\":1920,\"viewport\":1920,\"active\":true,\"title\":\"Generación TTS\"}"
+    },
+    {
+      "name": "Generación TTS reduced layout remains reachable",
+      "passed": true,
+      "detail": "{\"bodyWidth\":1009,\"viewport\":1024,\"active\":true,\"title\":\"Generación TTS\"}"
+    },
+    {
+      "name": "Director emocional desktop layout remains reachable",
+      "passed": true,
+      "detail": "{\"bodyWidth\":1920,\"viewport\":1920,\"active\":true,\"title\":\"Director emocional\"}"
+    },
+    {
+      "name": "Director emocional reduced layout remains reachable",
+      "passed": true,
+      "detail": "{\"bodyWidth\":1009,\"viewport\":1024,\"active\":true,\"title\":\"Director emocional\"}"
+    },
+    {
+      "name": "Motores desktop layout remains reachable",
+      "passed": true,
+      "detail": "{\"bodyWidth\":1920,\"viewport\":1920,\"active\":true,\"title\":\"Motores\"}"
+    },
+    {
+      "name": "Motores reduced layout remains reachable",
+      "passed": true,
+      "detail": "{\"bodyWidth\":1009,\"viewport\":1024,\"active\":true,\"title\":\"Motores\"}"
+    },
+    {
+      "name": "Historial y actividad desktop layout remains reachable",
+      "passed": true,
+      "detail": "{\"bodyWidth\":1920,\"viewport\":1920,\"active\":true,\"title\":\"Historial y actividad\"}"
+    },
+    {
+      "name": "Historial y actividad reduced layout remains reachable",
+      "passed": true,
+      "detail": "{\"bodyWidth\":1009,\"viewport\":1024,\"active\":true,\"title\":\"Historial y actividad\"}"
+    },
+    {
+      "name": "Ajustes desktop layout remains reachable",
+      "passed": true,
+      "detail": "{\"bodyWidth\":1920,\"viewport\":1920,\"active\":true,\"title\":\"Ajustes\"}"
+    },
+    {
+      "name": "Ajustes reduced layout remains reachable",
+      "passed": true,
+      "detail": "{\"bodyWidth\":1009,\"viewport\":1024,\"active\":true,\"title\":\"Ajustes\"}"
+    },
+    {
+      "name": "Browser console has no uncaught errors",
+      "passed": true,
+      "detail": "[]"
+    }
+  ]
+}

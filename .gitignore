@@ -1,0 +1,34 @@
+# Dependencias
+node_modules/
+
+# Salidas de compilación y cachés
+dist/
+*.tsbuildinfo
+vite.config.js
+vite.config.d.ts
+
+# Variables locales y secretos
+.env
+.env.*
+!.env.example
+
+# Configuración local de herramientas y memoria
+.engram/
+.pi/
+AGENTS.md
+odd/
+scripts/start-engram-memory.ps1
+scripts/install-engram-memory-task.ps1
+
+# Registros
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Editores y sistema operativo
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
