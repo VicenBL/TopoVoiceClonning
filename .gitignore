@@ -3,6 +3,7 @@ node_modules/
 
 # Salidas de compilación y cachés
 dist/
+dist-electron/
 *.tsbuildinfo
 vite.config.js
 vite.config.d.ts
