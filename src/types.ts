@@ -1,4 +1,4 @@
-export type ServiceStatus = 'stopped' | 'starting' | 'active' | 'stopping' | 'error';
+export type ServiceStatus = 'stopped' | 'starting' | 'active' | 'stopping' | 'error' | 'connecting' | 'unavailable';
 export type EngineStatus = 'available' | 'not_configured' | 'error' | 'offline';
 export type EngineKind = 'cloning' | 'tts' | 'both';
 export type JobStatus = 'queued' | 'processing' | 'completed' | 'error' | 'cancelled';
