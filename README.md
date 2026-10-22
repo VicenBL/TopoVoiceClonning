@@ -1,166 +1,105 @@
-# Voice Studio — Fase 1 Frontend Demo
+# Voice Studio
 
-Interfaz de demostración para una futura aplicación de escritorio Windows orientada a gestión de voces clonadas, generación TTS simulada y dirección emocional simulada.
+Aplicación de escritorio Windows con interfaz React/TypeScript y host Electron. **Fase 2A completada**: el servicio HTTP local y sus controles son reales; voces, clonación, generación TTS, motores y director emocional siguen en modo demostración.
 
-> **Estado:** Fase 1 exclusivamente frontend. No hay backend real, inferencia TTS, llamadas externas, modelos IA, integración con Streamer.bot ni claves API reales.
+- Commit de cierre: `f56f022aec9836597e5fcb4303a7b6abb2add838`.
+- RDD aprobado y cerrado: `review-b4cba67e13da3e9d`, con acknowledgement completado.
+- Fase 2B: **Pendiente de definición y aprobación del alcance. No iniciada**.
 
-## Continuidad entre sesiones
+## Abrir la aplicación
 
-Abrí la sesión de Pi/Gentle Shell en la carpeta de este proyecto. El nombre canónico en Engram es **`voice studio`**, con espacio; no es `voicestudio` ni `TopoVoiceCloning`.
-
-- `.engram/config.json` fija la identidad del proyecto para Engram.
-- `.pi/mcp.json` deshabilita la conexión MCP independiente para no eludir el control de arranque. La conexión prevista es el proveedor `gentle-engram` de Shell, con proyecto explícito `voice studio`.
-- `AGENTS.md` indica al agente recuperar memoria, leer el prompt completo y reconciliar las tareas antes de continuar.
-- `odd/requests/voice-studio-phase-1-original.md` conserva el prompt original completo, incluso si Engram no está disponible.
-- `odd/tasks/voice-studio-fase-1.md` contiene el seguimiento de la fase, todavía sin cierre de aceptación.
-
-En una sesión existente, ejecutá `/reload` para recargar instrucciones y configuración. No habilites el MCP independiente para sortear la política de Shell. Las instrucciones de `AGENTS.md` y la copia local siguen disponibles. La configuración no habilita conexiones con proveedores TTS ni servicios de la aplicación.
-
-### Estado de la reparación de memoria
-
-La primera comprobación con el Pi global falló: la sesión heredaba una política de memoria deshabilitada de Shell. También apareció un error de credenciales de ese Pi global; no se modificaron credenciales. Ese ejecutable no es el Pi integrado que administra Gentle Shell.
-
-El servidor existente está ahora activo y comprobado en `127.0.0.1:7437`: `/compatibility` respondió HTTP 200, `status: ready`, `active_reuse_authorized: true`, y la identidad coincide con el almacén. El sondeo y clasificador nativos de Shell autorizaron la reutilización en un entorno de arranque nuevo. Además, una prueba real del launcher administrado y Pi integrado en modo RPC terminó con código 0: recibió `startup_policy=allow`, seleccionó el servidor y recuperó el contexto de `voice studio`, sin pedir inferencia a un modelo. La revisión independiente verificó respaldo, tarea, listener, identidad y protección.
-
-Una sesión que ya arrancó con la política `disabled` conserva ese estado: no se modifica ni se elude. Cerrá y abrí Gentle Shell desde la carpeta del proyecto para que vuelva a decidir; un `/reload` por sí solo no cambia la política heredada. Usá el launcher administrado `%LOCALAPPDATA%/gentle-shell/bin/gentle-shell.cmd`, no el `pi` global.
-
-No borres datos, no fabriques procedencia y no desactives el control. Si una actualización futura cambia la compatibilidad, Shell puede bloquear de nuevo la memoria; una versión coincidente por sí sola no demuestra reutilización segura.
-
-### Diagnóstico y reparación preparada
-
-La identidad del almacén coincide con el registro de Shell, pero la huella del ejecutable integrado de Engram no coincide. No había servidor escuchando en `127.0.0.1:7437`. No se modificó el registro de procedencia.
-
-Respaldo verificado por SHA-256: `C:/Users/loren/.engram-backups/before-shell-repair-20261014-194122`. Incluye la base y sus archivos WAL/SHM. El rechazo del sondeo offline es compatible con la presencia de esos archivos; no acredita corrupción ni autoriza una apertura.
-
-Se prepararon `scripts/start-engram-memory.ps1` y `scripts/install-engram-memory-task.ps1` para iniciar el servidor existente con privilegios limitados al entrar en Windows, comprobar loopback, identidad y `/compatibility`, y evitar duplicados. El primer intento fue rechazado por la política efectiva Restricted. Después de una autorización específica del usuario se estableció `RemoteSigned` solamente en `CurrentUser`; el estado anterior (`Undefined`) está registrado en `execution-policy-before.json` dentro del respaldo. No se utilizó Bypass ni se modificó LocalMachine. La tarea `VoiceStudio-EngramMemory` quedó registrada e iniciada: `Running`, usuario interactivo, privilegios `Limited`, sin contraseña almacenada. Su trigger de próximo inicio de sesión está registrado; todavía no se observó un cierre e inicio real de Windows.
-
-El arranque usa el ejecutable existente `%LOCALAPPDATA%/engram/bin/engram.exe`, conserva los datos en `%USERPROFILE%/.engram` y escribe logs en `%USERPROFILE%/.gentle-shell/agent/memory-logs`. No descarga software ni guarda contraseñas. Si el proyecto se mueve, hay que actualizar la ruta de la tarea.
-
-Reversión manual (no ejecutada):
-
-```powershell
-Stop-ScheduledTask -TaskName 'VoiceStudio-EngramMemory'
-Unregister-ScheduledTask -TaskName 'VoiceStudio-EngramMemory' -Confirm
-Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy Undefined
-```
-
-La reversión de la tarea no borra las memorias ni el respaldo.
-
-Para comprobar la memoria sin MCP, únicamente cuando no exista un bloqueo de seguridad de arranque:
-
-```bash
-engram context --project "voice studio"
-engram search "Voice Studio Phase 1" --project "voice studio" --limit 20
-```
-
-La recuperación está configurada para sesiones abiertas en esta carpeta; no para sesiones iniciadas en cualquier otra carpeta. No se fusionaron ni borraron las memorias existentes.
-
-## Ejecutar en desarrollo
+Con Node.js/npm y las dependencias del proyecto instalados:
 
 ```bash
 npm install
+npm run build
+npm run start:desktop
+```
+
+Electron carga el renderer compilado y gestiona el servicio sin una ventana CMD adicional para el servidor. En Ajustes se pueden cambiar el puerto, el inicio automático y la continuidad al cerrar la ventana.
+
+Para trabajar sólo en la interfaz con Vite:
+
+```bash
 npm run dev
 ```
 
-Abrí la URL local que imprime Vite, normalmente:
+Abrí la URL local que imprime Vite, normalmente `http://127.0.0.1:5173/`. **El navegador por sí solo no tiene el preload de Electron**: muestra «Host de escritorio no disponible» y deshabilita los controles del servicio, en lugar de simular que está activo.
 
-```text
-http://127.0.0.1:5173/
-```
+El uso conjunto de Electron y Vite está descrito en [el contrato del servicio local](docs/fase-2a-servicio-local.md#ejecución-de-escritorio). `npm run preview` permite previsualizar el renderer ya compilado, también sin host Electron.
 
-## Verificar build y flujos de Fase 1
+## Qué está implementado
 
-```bash
-npm run build
-npm run test:phase1
-```
+| Área | Estado actual |
+| --- | --- |
+| Interfaz | Ocho pantallas: Producción, Biblioteca de voces, Clonar voz, Generación TTS, Director emocional, Motores, Historial y actividad, Ajustes. |
+| Servicio local | Un servidor `node:http` en el proceso principal, limitado a `127.0.0.1`; puerto predeterminado `4317`, configurable entre `1024` y `65535`. |
+| Control y diagnóstico | Inicio, parada y reinicio desde React; estados efectivos, detección de conflictos y modal de diagnóstico específico. `GET /health` confirma el servicio real. |
+| Preferencias | Puerto, inicio automático y continuidad al cerrar persistidos en `localStorage` y aplicados al host. |
+| Ciclo de vida | Instancia única, bandeja, restauración y apagado con limpieza del servicio. |
+| Aislamiento | Renderer sin acceso directo a Node; `contextIsolation`, sandbox y preload con operaciones concretas e IPC validado. |
 
-`test:phase1` utiliza una instalación local de Microsoft Edge o Google Chrome en modo headless. Recorre los flujos principales mediante la interfaz pública, comprueba la consola y genera capturas de las ocho pantallas a 1920×1080 y 1024×768 en `artifacts/screenshots/phase1/`.
+Con `keepRunningOnClose` activado, cerrar oculta la ventana y mantiene el servicio. Desactivado, detiene el servicio y sale. «Salir» en bandeja siempre solicita el apagado. Un icono ausente o ilegible no bloquea el ocultamiento. Si el cierre ocurre antes de recibir las preferencias iniciales, el host espera como máximo tres segundos y, si no llegan, solicita una salida segura.
 
-## Estructura principal
+Contrato, endpoint, IPC y comportamiento detallados: [Fase 2A — Servicio local](docs/fase-2a-servicio-local.md).
 
-```text
-src/
-  App.tsx        # Aplicación, navegación, pantallas e interacciones demo
-  demoData.ts   # Datos simulados centralizados: voces, motores, trabajos, ajustes
-  types.ts      # Modelos tipados principales
-  styles.css    # Sistema visual oscuro y responsive
-  main.tsx      # Entrada React/Vite
-scripts/
-  phase1-ui-check.mjs # Verificación funcional y visual automatizada con navegador local
-odd/
-  tasks/voice-studio-fase-1.md  # Documento ODD de la fase
-```
+### Qué sigue siendo demostración
 
-## Pantallas implementadas
+Las voces y versiones, referencias de audio, motores, cola, generaciones TTS, comparaciones A/B y planes emocionales utilizan datos simulados centralizados en `src/demoData.ts`. Se conservan las interacciones entre pantallas y el estado demo; no se genera audio real ni se conecta con Streamer.bot o Twitch.
 
-- Producción
-- Biblioteca de voces
-- Clonar voz
-- Generación TTS
-- Director emocional
-- Motores
-- Historial y actividad
-- Ajustes
+No hay proveedores TTS reales, inferencia, modelos descargados, claves API reales ni director emocional con IA. Tampoco se entrega un instalador definitivo de Windows. Estas ausencias describen los límites actuales, **no requisitos aprobados de una fase posterior**.
 
-Todas comparten navegación lateral, barra superior persistente, estado simulado de servicio local y sistema de notificaciones.
+El texto introducido se conserva literalmente, incluidos `AAAAA---éééé%%%%`, `JAJAJAJAaaaáááá` y `¿¿¿???---!!!`.
 
-## Datos simulados
+## Comandos existentes
 
-Los datos demo están centralizados en `src/demoData.ts`:
+Los comandos siguientes ya están definidos en `package.json`; esta actualización documental no los ejecuta ni los modifica.
 
-- Voces: Topota, Chiquito, Dumbledore y Chocás.
-- Versiones múltiples para validar selección activa y conservación de versiones.
-- Motores ficticios: Fish Audio — demo, Motor local A — demo, Motor local B — demo.
-- Capacidades declarativas por motor para adaptar formularios de clonación y generación.
-- Referencias de audio reutilizables.
-- Perfiles emocionales simulados.
-- Trabajos iniciales con estados completado y error.
+| Comando | Uso |
+| --- | --- |
+| `npm run dev` | Renderer Vite en loopback, sin host Electron. |
+| `npm run build` | TypeScript, host/preload Electron y renderer Vite. |
+| `npm run build:electron` | Compila el host y empaqueta el preload. |
+| `npm run preview` | Previsualiza el renderer compilado. |
+| `npm run start:desktop` | Abre Electron; requiere build previo. |
+| `npm run test:service` | Prepara el build y ejecuta `node --test electron/*.test.ts`. |
+| `npm run test:phase2a:preferences` | Regresión de preferencias concurrentes con React, preload, IPC y controlador reales. |
+| `npm run test:phase2a:startup-close` | Regresión del cierre antes de recibir las preferencias iniciales. |
+| `npm run test:phase2a:desktop` | Build y comprobación funcional nativa del escritorio. |
+| `npm run test:phase1` | Regresión de interfaz con Edge/Chrome headless y capturas; valida el modo sin host. |
 
-Los identificadores externos son ficticios y no corresponden a cuentas reales.
+También existen dos modos directos de los scripts:
 
-## Interacciones cubiertas
+- `node scripts/phase2a-desktop-check.mjs --wait-for-self-test`: autocheck de las esperas de arranque y limpieza poscierre.
+- `R2_DIAGNOSTICS_FAILURE=1 node scripts/phase2a-preferences-check.cjs`: regresión ante rechazo de diagnósticos; esa sintaxis de variable corresponde a Bash. En PowerShell, establecé `$env:R2_DIAGNOSTICS_FAILURE = '1'`, ejecutá el script y retirala después con `Remove-Item Env:R2_DIAGNOSTICS_FAILURE`.
 
-- Deshabilitar/habilitar voces y verlo reflejado entre Producción y Biblioteca.
-- Cambiar versión activa de una voz desde vistas distintas.
-- Crear voz o nueva versión demo sin activar automáticamente la versión nueva.
-- Cambiar motor de producción con confirmación e incompatibilidades visibles.
-- Adaptar controles de clonación según capacidades declaradas del motor.
-- Ejecutar generación simulada y verla en cola/historial.
-- Simular solicitud externa de Streamer.bot sin conectar Streamer.bot real.
-- Provocar errores demo y abrir diagnóstico específico del trabajo.
-- Mantener literalmente textos con símbolos, acentos y secuencias extrañas.
-- Comparar configuraciones A/B usando el mismo texto original.
-- Activar/desactivar servicio local simulado desde la barra superior y Ajustes.
-- Persistir ajustes y estado demo en `localStorage`.
-- Restaurar datos de demostración desde la barra superior.
+Las comprobaciones nativas requieren Windows con sesión de escritorio activa; el smoke desktop espera el puerto `4317` libre. Las suites utilizan perfiles y temporales aislados. `test:phase1` genera el informe `artifacts/phase1-ui-check.json` y capturas; no debe ejecutarse sólo para actualizar la documentación. El entorno de pruebas registrado utilizó Node.js 24.
 
-## Pendiente para fases posteriores
+## Evidencia del cierre
 
-- Backend/API local real.
-- Integración con Streamer.bot.
-- Integración con Fish Audio u otros proveedores.
-- Instalación/ejecución de modelos locales.
-- Inferencia TTS real.
-- Grabación real de micrófono y subida/procesamiento real de audio.
-- Director emocional con IA real.
-- Reproductor y archivos de audio reales por generación.
-- Gestión segura de secretos y credenciales.
-- Empaquetado definitivo para escritorio Windows.
+Son **resultados históricos ya observados**, no pruebas nuevas de esta actualización:
 
-## Verificación realizada
+- Última validación del candidato: build PASS; preferencias **2/2**; diagnósticos **1/1**; cierre inicial **4/4**; servicio **21/21**; desktop **60/60**; autocheck poscierre **4/4**; diff-check PASS.
+- Evidencia anterior: regresión Phase 1 **41/41**, 16 capturas a 1920×1080 y 1024×768, verificación independiente, salida mediante el menú real de bandeja y paquete temporal de Electron **60/60**. El paquete temporal no equivale a un instalador definitivo.
+- Los cuatro resultados RDD fueron admitidos; la revisión quedó `approved` y su acknowledgement terminó con `status:closed`, `authority:burned`.
+- El commit final contiene exactamente **45 archivos**: 26 modificados y 19 nuevos. Su árbol completo coincide con el aprobado.
 
-- `npm run build`: **PASS**. TypeScript estricto y build de Vite completados. Vite informa únicamente una advertencia no bloqueante sobre la futura carga nativa de `vite.config.js`.
-- `npm run test:phase1`: **PASS — 41/41 comprobaciones** mediante Microsoft Edge headless y la interfaz pública.
-- Flujos comprobados: navegación, sincronización de disponibilidad y versión, candidata de clonación sin guardar independiente de la versión activa, nueva versión sin autoactivación, capacidades dinámicas de clonación, texto original exacto, cola serial, A/B enlazado con controles independientes, diagnóstico específico, cambio de motor, director emocional, historial, persistencia, `autoStart` y `keepRunningOnClose`.
-- Casos literales comprobados: `AAAAA---éééé%%%%`, `JAJAJAJAaaaáááá` y `¿¿¿???---!!!`.
-- Consola del navegador: sin excepciones ni errores de recursos.
-- Informe reproducible: `artifacts/phase1-ui-check.json`.
+Los seis hallazgos admitidos son **no bloqueantes**, no reabren la revisión ni obligan a corregir o repetir RDD. Su lista y ubicaciones están en [el estado del proyecto](docs/PROJECT-STATE.md#seguimiento-no-bloqueante).
 
-## Notas de revisión visual
+## Estructura y continuidad
 
-Se generaron y revisaron las ocho pantallas tanto a **1920×1080** como a **1024×768**: 16 capturas en `artifacts/screenshots/phase1/`. Las hojas `contact-desktop.png` y `contact-reduced.png` facilitan la revisión conjunta.
+- `src/`: interfaz, modelos de datos y datos demo.
+- `electron/`: host, servicio HTTP, contrato, preload, IPC y pruebas.
+- `scripts/`: comprobaciones de interfaz y escritorio.
+- `assets/tray.ico`: recurso de bandeja.
+- `docs/fase-2a-servicio-local.md`: contrato y ejecución del servicio.
+- [docs/PROJECT-STATE.md](docs/PROJECT-STATE.md): tareas, commits, validaciones, RDD y seguimiento.
+- `odd/tasks/voice-studio-fase-2a.md` y `odd/voice-studio-fase-2a/tasks`: seguimiento interno ignorado por Git.
 
-La inspección no mostró solapamientos, controles esenciales inaccesibles ni desbordamiento horizontal global. En ventana reducida la navegación y la barra superior permanecen visibles, mientras el contenido usa scroll vertical y las tablas mantienen su propio scroll cuando corresponde.
+El proyecto canónico de Engram es **`voice studio`**. Recuperá el estado actual y sus evidencias antes de continuar: las notas antiguas de Fase 1 o de reparación de memoria no sustituyen este cierre. Usá la integración de memoria de Gentle Shell; no habilites rutas alternativas para eludir un bloqueo de seguridad de arranque. Esta documentación no cambia la instalación de Shell ni la configuración de memoria.
 
-La verificación técnica de la Fase 1 está completa. La fase conserva un último gate externo: la revisión visual y aprobación del usuario antes de avanzar a cualquier backend, servicio o integración real.
+## Método y siguiente fase
+
+Se mantienen **TDD, RDD, KISS, DRY, YAGNI y desarrollo por fases**: requisitos y contratos claros, prueba que falle cuando corresponda, implementación mínima, verificación y revisión controlada. Las decisiones de commit, publicación y comienzo de otra fase requieren autorización separada.
+
+**Fase 2B: Pendiente de definición y aprobación del alcance. No iniciada**.

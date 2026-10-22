@@ -1,102 +1,118 @@
 # Voice Studio — Estado del proyecto
 
-Documento de continuidad basado en la auditoría de lectura del repositorio y sus registros locales. No sustituye los requisitos originales ni acredita una nueva ejecución de pruebas o una consulta de autoridad RDD.
+**Fase 2A completada oficialmente**, según confirmación del usuario. T1–T5 están terminadas y entregadas localmente; la revisión RDD fue aprobada y su acknowledgement completó el cierre protocolario.
 
-## Arquitectura y decisiones vigentes
+| Referencia | Valor |
+| --- | --- |
+| Rama de entrega | `feat/fase-2a-servicio-local` |
+| Commit final | `f56f022aec9836597e5fcb4303a7b6abb2add838` |
+| Padre del commit final | `4139a0ef71d4d4943bbd7ef271f2c0309c38c099` |
+| RDD aprobado y cerrado | `review-b4cba67e13da3e9d` |
+| Alcance del commit final | 45 archivos: 26 modificados y 19 nuevos |
+| Publicación de esta entrega | No se hizo push ni merge |
+| Fase 2B | Pendiente de definición y aprobación del alcance. No iniciada |
 
-- Frontend React, TypeScript y Vite, con estilos propios y ocho pantallas: Producción, Biblioteca de voces, Clonar voz, Generación TTS, Director emocional, Motores, Historial y Ajustes.
-- Datos de demostración centralizados en `src/demoData.ts`; modelos en `src/types.ts`; estado y preferencias persistidos en `localStorage`.
-- Electron conserva el frontend existente. El proceso principal administra un único servicio `node:http`, la instancia única, bandeja y apagado.
-- Renderer sin acceso directo a Node, con `contextIsolation`, `nodeIntegration: false` y sandbox. El preload expone operaciones específicas mediante `window.voiceStudio.service`, sin IPC genérico público.
-- Servicio real restringido a `127.0.0.1`, con `/health`, inicio/parada/reinicio, estados efectivos y diagnósticos. Preferencias de puerto entre 1024 y 65535, inicio automático y continuidad al cerrar.
-- Con `keepRunningOnClose` activo, cerrar oculta la ventana y mantiene el servicio. Desactivado, detiene el servicio y sale. «Salir» en bandeja siempre solicita el apagado. El icono se resuelve desde la raíz de la aplicación; su ausencia no debe bloquear el ocultamiento.
-- Voces, clonación, trabajos, generación TTS, motores y director emocional siguen siendo demostraciones. No se implementan todavía SQLite, proveedores reales, inferencia, modelos locales, Streamer.bot ni Twitch.
-- El texto original debe conservarse literalmente, incluidos `AAAAA---éééé%%%%`, `JAJAJAJAaaaáááá` y `¿¿¿???---!!!`.
+Esta actualización es una entrega documental independiente y todavía sin commit. No cambia el commit final, sus 45 archivos, el candidato congelado ni la autoridad RDD. Las validaciones de producto citadas son históricas: no se repiten pruebas, builds ni revisiones para actualizar estos documentos.
 
-Fuentes: `docs/fase-2a-servicio-local.md`, `electron/main.ts`, `electron/service-contract.ts`, `electron/preload-bridge.ts`, `src/App.tsx` y registros ODD.
+## Arquitectura y límites actuales
 
-## Fases y tareas
+- React, TypeScript y Vite conservan las ocho pantallas y la experiencia de demostración. Los datos demo y modelos están en `src/demoData.ts` y `src/types.ts`.
+- Electron posee el servicio `node:http`, la instancia única, la bandeja y el apagado. El servidor escucha exclusivamente en `127.0.0.1`; ofrece `GET /health` y control real desde React.
+- El renderer usa `contextIsolation`, sandbox y `nodeIntegration: false`. El preload expone operaciones concretas de servicio; el proceso principal valida IPC y origen, sin puente Node genérico.
+- Las preferencias de puerto (`1024`–`65535`), inicio automático y continuidad al cerrar se persisten en `localStorage` y se aplican al host. El puerto predeterminado es `4317`.
+- Con `keepRunningOnClose=true`, cerrar oculta la ventana y conserva el servicio; con `false`, lo detiene y sale. «Salir» en bandeja solicita siempre el apagado. Un icono no disponible no bloquea el ocultamiento.
+- El cierre temprano espera hasta tres segundos por la primera configuración válida; si no llega, solicita salida segura. Los cambios concurrentes de preferencias se aplican en orden, sin perder campos.
+- Los errores del servicio tienen diagnóstico específico y modal. Un fallo al recuperar diagnósticos muestra una advertencia sin invalidar un servicio ya configurado.
+- Voces, clonación, TTS, motores, director emocional, trabajos e historial de generaciones continúan en demostración. No hay integración real con proveedores, Streamer.bot o Twitch, inferencia, descarga de modelos ni SQLite.
 
-La Fase 1 está documentada como completada y aprobada visualmente por el usuario, con T1–T5 vinculadas al commit `ca325d4`. La revisión nativa de su candidato fue declinada sin crear lineage. La autorización posterior habilitó exclusivamente la Fase 2A.
+Se conserva literalmente el texto original, incluidos `AAAAA---éééé%%%%`, `JAJAJAJAaaaáááá` y `¿¿¿???---!!!`. No se entrega un instalador definitivo de Windows. Ninguno de los elementos fuera del alcance actual constituye por sí mismo un requisito aprobado de una fase posterior.
 
-La Fase 2A está implementada, pero no cerrada. Su seguimiento formal es:
+Contrato y comandos: [servicio local](fase-2a-servicio-local.md) y [README](../README.md#comandos-existentes).
 
-| Tarea | Estado registrado | Evidencia / entrega |
+## Tareas T1–T5 completadas
+
+| Tarea | Resultado | Commit de entrega |
 | --- | --- | --- |
-| T1 | Completada | Contrato, Electron y validaciones; commit `794871b`. |
-| T2 | Completada | Servidor HTTP local, `/health`, estados, conflictos, reinicio y apagado; commit `883b0f2`. |
-| T3 | En curso, implementación existente | Host Electron, preload, IPC, instancia única, bandeja y cierre; sin commit de cierre. |
-| T4 | En curso, implementación existente | Integración React con estado real, preferencias persistentes y modal de diagnóstico; sin commit de cierre. |
-| T5 | Bloqueada | Verificaciones documentadas; cierre detenido por revisión nativa pendiente. |
+| T1 | Contrato del servicio, Electron, tipos, validación de preferencias y límites de confianza. | `794871b` |
+| T2 | HTTP local, `/health`, loopback, estados efectivos, conflictos, reinicio y apagado. | `883b0f2` |
+| T3 | Host Electron, preload/IPC restringido, instancia única, bandeja, restauración y cierre seguro. | `f56f022` |
+| T4 | React conectado al estado real, controles, preferencias persistentes y modal de diagnóstico; resto demo conservado. | `f56f022` |
+| T5 | Validaciones reconciliadas, revisión RDD cerrada y entrega selectiva del candidato aprobado. | `f56f022` |
 
-La Fase 2B no está autorizada. El empaquetado/instalador definitivo de Windows no forma parte de la entrega actual.
+La Fase 1 había quedado aprobada visualmente y entregada en `ca325d4`. La Fase 2A no rehizo esa interfaz: sustituyó únicamente el servicio simulado por el host y servicio reales autorizados. No se identificaron requisitos funcionales pendientes dentro del alcance de Fase 2A; los avisos informativos de revisión se conservan como seguimiento separado.
 
-Fuentes: `odd/tasks/voice-studio-fase-1.md` (L18–L20), `odd/tasks/voice-studio-fase-2a.md` (Tasks, L21–L26) y `odd/voice-studio-fase-2a/tasks`.
+El seguimiento interno está en `odd/tasks/voice-studio-fase-2a.md` (L27–L37) y `odd/voice-studio-fase-2a/tasks`, ignorados por Git. Sus registros anteriores de bloqueo no representan el estado actual. No se modifican esos registros en esta entrega documental.
 
-## Git: instantánea observada en la auditoría
+## Validaciones registradas
 
-Rama activa: `feat/fase-2a-servicio-local`.
+### Última ronda del candidato aprobado
 
-| Commit | Descripción | Referencias locales observadas |
+| Comprobación | Resultado histórico |
+| --- | --- |
+| Build del renderer, host y preload | PASS |
+| Preferencias concurrentes | 2/2 |
+| Disponibilidad ante rechazo de diagnósticos | 1/1 |
+| Cierre durante el arranque | 4/4 |
+| Servicio e integración | 21/21 |
+| Escritorio Electron | 60/60 |
+| Autocheck de esperas poscierre | 4/4 |
+| `git diff --check` | PASS |
+
+Esa ronda se registró antes del nuevo START, sin deriva del contenido seleccionado. Incluye las correcciones TDD de preferencias obsoletas, conflación de disponibilidad/diagnósticos, carrera de cierre inicial, dependencia de artefactos de build y espera pos-salida.
+
+### Evidencia anterior complementaria
+
+- Phase 1: 41/41 comprobaciones y 16 capturas de las ocho pantallas a 1920×1080 y 1024×768; runner adaptado al modo sin host Electron.
+- Puertos: prueba enfocada de `configurePort()` 6/6 y probe independiente 10/10; verificación de preservación de ajustes y datos ajenos al servicio.
+- Verificación independiente aislada: servicio, build y regresiones, sin blocker reproducido en las comprobaciones documentadas. No todos los verificadores repitieron todos los flujos nativos.
+- Bandeja nativa en desarrollo: continuidad de `/health` tras cerrar, restauración y salida mediante la opción real «Salir», con cierre del listener y proceso.
+- Paquete temporal construido con el runtime Electron instalado: desktop 60/60 contra `Voice Studio.exe`, sin añadir dependencias ni packager. No equivale a validar un instalador definitivo.
+
+Fuentes de continuidad: registros ODD locales y Engram `voice studio`, especialmente la validación del candidato de 45 rutas y el cierre RDD. Son evidencias de ejecuciones previas, no resultados recién ejecutados por esta actualización. Las capturas rastreadas conservan su carácter histórico.
+
+## RDD aprobado y cierre protocolario
+
+- Lineage: `review-b4cba67e13da3e9d`.
+- Tier nativo: `high`; cuatro resultados de risk, resilience, readability y reliability preparados y admitidos.
+- Resultado: `approved`. Acknowledgement único autorizado: `native-approved-acknowledgement-completed`, `status:closed`, `authority:burned`.
+- Evidencia de consumo: `gentle-ai.review-acknowledged/v1`.
+- Revisión consumida: `sha256:c700ffec1d80a1b8873bea1f0d7b1e4b63c3ca8dc87031d875824bb63f6add62`.
+- Candidato: `sha256:e95799e44de3afbe61feca22f8efe921b8575b2c052e0ec7d362e57b66cf49bf`.
+- Árbol aprobado y árbol del commit final: `f03702851601fa0e19a38224081aa5639b5a1a80`.
+
+El cierre se acredita con la respuesta nativa del acknowledgement ya observada; no se volvió a consultar STATUS después del consumo ni se ejecuta RDD en esta entrega. No queda un cierre RDD pendiente para este candidato.
+
+El lineage anterior `review-068ef6ecf95123a3` terminó `escalated` y se conservó intacto. Es historia de un candidato anterior, no una revisión activa que deba reabrirse. La aprobación RDD no autorizó automáticamente publicar ni comenzar otra fase; el commit final tuvo autorización humana separada.
+
+## Seguimiento no bloqueante
+
+Los seis hallazgos siguientes fueron admitidos como **informativos y no bloqueantes**. No abrieron una corrección, no invalidan la aprobación y no justifican repetir esta revisión. Sus IDs y ubicaciones son los emitidos por el proveedor sobre el candidato revisado; no son nuevas reproducciones de defectos ni tareas aprobadas de Fase 2B.
+
+| Severidad nativa | Hallazgo | Ubicación |
 | --- | --- | --- |
-| `883b0f2` | `feat: implementa el servicio HTTP local` | HEAD de la rama activa |
-| `794871b` | `chore: define el contrato del servicio local` | Antecesor de HEAD |
-| `ca325d4` | `feat: incorpora la interfaz inicial de Voice Studio` | `main`, `origin/main` |
+| WARNING | `R1-unvalidated-renderer-url` — validación de la URL de arranque del renderer. | `electron/main.ts:14` |
+| WARNING | `R2-service-availability-conflation` — observación sobre disponibilidad y diagnóstico. | `src/App.tsx:98` |
+| WARNING | `R2-tray-errors-hidden` — visibilidad de errores de bandeja. | `electron/tray-support.ts:19` |
+| WARNING | `R3-navigation-redirect` — manejo de navegación/redirección. | `electron/main.ts:73-75` |
+| SUGGESTION | `R2-generated-host-one-line` — legibilidad del host generado por el arnés. | `scripts/phase2a-preferences-check.cjs:104` |
+| SUGGESTION | `R2-unvalidated-exit-policy` — validación explícita de la política de espera. | `scripts/phase2a-desktop-check.mjs:138-146` |
 
-Antes de crear este documento había 26 archivos rastreados modificados y 17 archivos nuevos sin seguimiento, sin cambios staged. El diff rastreado mostraba 144 inserciones y 40 eliminaciones, excluyendo contenido binario y archivos nuevos. Comprendía integración de escritorio, React, servicio, pruebas, documentación y evidencia visual.
+Su análisis y cualquier corrección posterior requieren un alcance separado. No se presentan como defectos críticos pendientes ni se confunden con las cinco causas ya corregidas mediante TDD.
 
-Estas cifras son históricas de la auditoría, no un contador actualizado: este documento agrega un archivo. No se consultó el remoto; `origin/main` es una referencia local, no prueba del estado actual en GitHub. `odd/` y `AGENTS.md` están ignorados por Git y no forman parte de los commits observados.
+## Estado de Git y archivos excluidos
 
-## Verificaciones: evidencia histórica frente a comprobaciones actuales
+El commit final se creó en `feat/fase-2a-servicio-local`, con el mensaje autorizado `feat: completa la integración de escritorio de la fase 2A`. Antes de crearlo se comprobaron las 45 rutas literales, sus blobs/modos frente al árbol aprobado y `git diff --cached --check`. Después se verificaron el mensaje exacto, un único commit nuevo y el árbol completo aprobado.
 
-### Resultados históricos documentados
+Fuera de ese commit quedaron los mismos **35 untracked**: 32 archivos bajo `.r3-build-test/`, `gentle-shell-fix.cmd`, `gentle-shell-fix.cmd.lnk` y `scripts/phase2a-diagnostics-check.cjs`. No se alteran ni eliminan. Los 17 artefactos rastreados de interfaz ya incluidos en el candidato son evidencia histórica aprobada, no archivos ajenos que deban retirarse ahora.
 
-- `npm run test:phase1`: 41/41 comprobaciones y 16 capturas.
-- `npm run test:service`: 21/21.
-- Prueba enfocada de `configurePort()`: 6/6.
-- `npm run build`: satisfactorio.
-- `git diff --check`: sin errores; avisos de conversión LF a CRLF.
-- Verificación independiente aislada: servicio 21/21, probe 3/3 y build/diff-check; sin blocker reproducido. Esa revisión final no repitió todas las interacciones Electron nativas.
-- Otra revisión independiente documentó smoke desktop 60/60 y probe de puertos 10/10.
-- Bandeja nativa en desarrollo: ocultamiento, continuidad de `/health` y salida mediante el menú real documentados, con cierre de proceso y listener.
-- Aplicación empaquetada temporalmente con el runtime Electron instalado, sin añadir dependencias: suite desktop 60/60. Incluyó controles React, `/health`, conflictos y diagnóstico, instancia única, persistencia y limpieza. No equivale a verificar un instalador definitivo.
+Esta entrega modifica sólo `README.md` y `docs/PROJECT-STATE.md`, ambos fuera de los 45 archivos del commit final. No hace staging, commit, push ni merge. La publicación y el segundo commit documental requieren autorización propia; no se afirma un árbol de trabajo completamente limpio mientras existan los documentos modificados y los untracked excluidos.
 
-Fuentes: `odd/tasks/voice-studio-fase-2a.md` (L13–L25), su espejo local y `artifacts/phase1-ui-check.json`, cuyo encabezado registra 41/41 y 16 capturas.
+## Continuidad y método
 
-### Comprobaciones actuales y límites
+El proyecto canónico de Engram es **`voice studio`**. La memoria se recuperó mediante la integración de Gentle Shell; las notas anteriores de inaccesibilidad o de reparación son históricas, no un diagnóstico vigente. No se migran almacenes, no se cambian credenciales ni se eluden bloqueos de arranque. Los registros ODD y este documento permiten reconciliar el estado sin repetir la implementación o la revisión cerrada.
 
-La auditoría leyó documentación, registros, fuente y metadatos/diffs Git. No ejecutó pruebas, builds, aplicación, consultas al remoto ni operaciones RDD. La creación de este documento tampoco autoriza tales ejecuciones.
+Se mantienen **TDD, RDD, KISS, DRY, YAGNI y desarrollo por fases**. Separar requisitos aprobados, trabajo implementado, evidencias históricas y autorizaciones futuras. Un cambio documental no autoriza correcciones de código, revisiones adicionales ni cambios del entorno.
 
-Los resultados anteriores no se presentan como pruebas recién ejecutadas ni garantizan que los bytes actuales sigan pasando. La auditoría no acreditó la integridad o reproducibilidad de toda la evidencia temporal histórica.
+## Fase 2B
 
-## RDD pendiente y restricciones
-
-Último estado documentado del lineage `review-068ef6ecf95123a3`:
-
-- START registrado con tier high y cuatro lentes.
-- ASSESS previo registrado como `unassessable` por la declaración de archivos sin seguimiento.
-- Rechazos históricos del grupo de captura. Tras reabrirse el cierre, un único envío del grupo completo del STATUS vigente volvió a responder `capture-group-rejected`, con `mutation_performed:false`.
-- Sin forecast, reviewers ejecutados, veredicto, aprobación ni acknowledgement documentados.
-- Última decisión registrada del usuario: «Mantener lineage pendiente», sin nuevas capturas ni abandono.
-- T5, cierre de Fase 2A y commit permanecen bloqueados. Push y Fase 2B no autorizados.
-
-Esto es una recuperación documental, no una consulta de la autoridad actual ni una confirmación de su identidad frente al árbol de trabajo actual. Fuente: `odd/tasks/voice-studio-fase-2a.md`, L21–L26.
-
-Si se autoriza retomar RDD, deben respetarse los `collectBindings` exactos del STATUS vigente, conservando campos, valores y orden. Ante `capture-group-rejected`, detener reintentos automáticos y conservar el diagnóstico; que STATUS reofrezca el grupo no autoriza repetirlo.
-
-## Gentle Shell y memoria
-
-Engram está temporalmente inaccesible por una incompatibilidad de Gentle Shell 4.3.0, según la indicación actual del usuario. No migrar, reparar ni inicializar una memoria nueva; no eludir la política de arranque. La continuidad se recuperó de archivos locales, no de historiales completos de Engram.
-
-El usuario informa que hay una corrección de Gentle Shell preparada en un checkout independiente, commit `2d5560c2a`. Este dato se incluye por su solicitud expresa: no fue recuperado ni verificado durante la auditoría del repositorio Voice Studio. No se conoce aquí su diff, validación, integración o disponibilidad en el runtime actual; no debe tratarse como una corrección instalada ni como prueba de que RDD o Engram ya funcionan.
-
-README y AGENTS conservan referencias anteriores al gate pendiente de Fase 1 y a reparaciones de memoria. Los registros ODD posteriores documentan la aprobación de Fase 1 y la autorización de Fase 2A. No se modificaron esos archivos.
-
-## Próximos pasos autorizables — no ejecutados
-
-1. Autorizar una inspección del checkout independiente de Gentle Shell para verificar `2d5560c2a`, su alcance y evidencia; cualquier integración o actualización requiere una decisión separada.
-2. Decidir cuándo y cómo retomar la autoridad RDD pendiente, sin asumir que la corrección ya resolvió el rechazo ni repetir automáticamente capturas.
-3. Autorizar, si corresponde, comprobaciones actuales sobre un candidato definido; distinguirlas de la evidencia histórica y documentar sus límites.
-4. Una vez resuelto el bloqueo, reconciliar T3–T5 y solicitar autorización explícita para el commit final en la rama actual. Publicación, merge y Fase 2B requieren decisiones separadas.
-
-La autorización vigente de esta entrega es únicamente crear este documento y comprobar que no esté ignorado por Git. No autoriza cambios de aplicación, modificaciones de AGENTS/ODD, pruebas, subagentes, operaciones RDD, commit ni push.
+**Pendiente de definición y aprobación del alcance. No iniciada**.
