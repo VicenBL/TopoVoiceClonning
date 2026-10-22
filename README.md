@@ -4,7 +4,7 @@ Aplicación de escritorio Windows con interfaz React/TypeScript y host Electron.
 
 - Commit de cierre: `f56f022aec9836597e5fcb4303a7b6abb2add838`.
 - RDD aprobado y cerrado: `review-b4cba67e13da3e9d`, con acknowledgement completado.
-- Fase 2B: **Pendiente de definición y aprobación del alcance. No iniciada**.
+- Fase 2B: **Tarea 1 implementada; verificación independiente pendiente**. La selección nativa de un archivo local de audio/vídeo no reproduce ni procesa medios.
 
 ## Abrir la aplicación
 
@@ -75,6 +75,10 @@ También existen dos modos directos de los scripts:
 
 Las comprobaciones nativas requieren Windows con sesión de escritorio activa; el smoke desktop espera el puerto `4317` libre. Las suites utilizan perfiles y temporales aislados. `test:phase1` genera el informe `artifacts/phase1-ui-check.json` y capturas; no debe ejecutarse sólo para actualizar la documentación. El entorno de pruebas registrado utilizó Node.js 24.
 
+## Fase 2B · Tarea 1: seleccionar archivo local
+
+En «Clonar voz», la tarjeta «Archivo local · selección real» abre el selector nativo para elegir un archivo de audio o vídeo. Cancelar conserva la selección y el error previos. Esta tarea sólo muestra el nombre y la ruta; no reproduce, procesa ni guarda el medio y no cambia los controles demo existentes. Para comprobarlo, abre Voice Studio, entra en «Clonar voz» y pulsa «Seleccionar archivo»; el archivo aparecerá en esa tarjeta. La Tarea 2 sigue sin autorizar.
+
 ## Evidencia del cierre
 
 Son **resultados históricos ya observados**, no pruebas nuevas de esta actualización:
@@ -102,4 +106,4 @@ El proyecto canónico de Engram es **`voice studio`**. Recuperá el estado actua
 
 Se mantienen **TDD, RDD, KISS, DRY, YAGNI y desarrollo por fases**: requisitos y contratos claros, prueba que falle cuando corresponda, implementación mínima, verificación y revisión controlada. Las decisiones de commit, publicación y comienzo de otra fase requieren autorización separada.
 
-**Fase 2B: Pendiente de definición y aprobación del alcance. No iniciada**.
+**Fase 2B: Tarea 1 implementada; verificación independiente pendiente. Tarea 2 pendiente de autorización.**

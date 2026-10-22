@@ -1,3 +1,4 @@
+import { MEDIA_CHANNELS, type MediaBridge } from './media-contract.ts';
 import {
   SERVICE_CHANNELS,
   type ServiceBridge,
@@ -10,6 +11,12 @@ export interface RendererIpcAdapter {
   invoke(channel: string, payload?: unknown): Promise<unknown>;
   on(channel: string, listener: (...args: unknown[]) => void): void;
   removeListener(channel: string, listener: (...args: unknown[]) => void): void;
+}
+
+export function createMediaBridge(ipc: RendererIpcAdapter): MediaBridge {
+  return {
+    selectFile: () => ipc.invoke(MEDIA_CHANNELS.select) as Promise<Awaited<ReturnType<MediaBridge['selectFile']>>>,
+  };
 }
 
 export function createServiceBridge(ipc: RendererIpcAdapter): ServiceBridge {

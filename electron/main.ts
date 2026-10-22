@@ -1,9 +1,10 @@
-import { app, BrowserWindow, ipcMain, Menu, nativeImage, Tray } from 'electron';
+import { app, BrowserWindow, dialog, ipcMain, Menu, nativeImage, Tray } from 'electron';
 import { dirname, join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { DesktopServiceController, resolveCloseAction } from './desktop-controller.ts';
 import { SERVICE_CHANNELS } from './service-contract.ts';
+import { registerMediaSelectionIpc } from './media-selection.ts';
 import { registerServiceIpc } from './service-ipc.ts';
 import { isTrustedRendererUrl } from './renderer-security.ts';
 import { hideWithoutBlocking, resolveTrayIconPath, tryCreateTray } from './tray-support.ts';
@@ -22,6 +23,7 @@ let tray: Tray | null = null;
 let quitting = false;
 let quitPromise: Promise<void> | null = null;
 let unregisterIpc: (() => void) | null = null;
+let unregisterMediaIpc: (() => void) | null = null;
 let closePromise: Promise<void> | null = null;
 let signalInitialPreferences: (() => void) | undefined;
 const initialPreferencesReady = new Promise<void>(resolve => { signalInitialPreferences = resolve; });
@@ -120,6 +122,8 @@ async function requestQuit(): Promise<void> {
   quitPromise = controller.shutdown().then(() => {
     unregisterIpc?.();
     unregisterIpc = null;
+    unregisterMediaIpc?.();
+    unregisterMediaIpc = null;
     tray?.destroy();
     tray = null;
     app.quit();
@@ -140,6 +144,11 @@ if (!hasSingleInstanceLock) {
   app.on('activate', showMainWindow);
 
   void app.whenReady().then(() => {
+    const isTrustedSender = (event: { sender?: { id?: number }; senderFrame?: { url?: string } }) => Boolean(
+      mainWindow
+      && event.sender?.id === mainWindow.webContents.id
+      && isTrustedRendererUrl(event.senderFrame?.url, trustedRendererUrl),
+    );
     unregisterIpc = registerServiceIpc(
       {
         handle(channel, listener) {
@@ -153,11 +162,16 @@ if (!hasSingleInstanceLock) {
       },
       controller,
       snapshot => mainWindow?.webContents.send(SERVICE_CHANNELS.stateChanged, snapshot),
-      event => Boolean(
-        mainWindow
-        && event.sender?.id === mainWindow.webContents.id
-        && isTrustedRendererUrl(event.senderFrame?.url, trustedRendererUrl),
-      ),
+      isTrustedSender,
+    );
+    unregisterMediaIpc = registerMediaSelectionIpc(
+      ipcMain,
+      { showOpenDialog: (owner, options) => dialog.showOpenDialog(owner as BrowserWindow, options) },
+      () => {
+        if (!mainWindow || mainWindow.isDestroyed()) throw new Error('La ventana principal no está disponible.');
+        return mainWindow;
+      },
+      isTrustedSender,
     );
     createMainWindow();
   });

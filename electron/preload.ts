@@ -1,6 +1,6 @@
 import { contextBridge, ipcRenderer } from 'electron';
 
-import { createServiceBridge, type RendererIpcAdapter } from './preload-bridge.ts';
+import { createMediaBridge, createServiceBridge, type RendererIpcAdapter } from './preload-bridge.ts';
 
 const ipc: RendererIpcAdapter = {
   invoke: (channel, payload) => payload === undefined
@@ -11,4 +11,5 @@ const ipc: RendererIpcAdapter = {
 };
 
 const service = Object.freeze(createServiceBridge(ipc));
-contextBridge.exposeInMainWorld('voiceStudio', Object.freeze({ service }));
+const media = Object.freeze(createMediaBridge(ipc));
+contextBridge.exposeInMainWorld('voiceStudio', Object.freeze({ service, media }));
