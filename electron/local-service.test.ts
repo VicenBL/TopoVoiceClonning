@@ -128,3 +128,19 @@ test('reinicia cerrando primero y vuelve a dejar /health disponible', async t =>
   assert.deepEqual(statuses, ['stopping', 'stopped', 'starting', 'active']);
   assert.equal((await readJson(`http://127.0.0.1:${restarted.port}/health`)).status, 200);
 });
+
+test('configurePort acepta únicamente puertos entre 1024 y 65535', () => {
+  const service = new LocalHttpService({ port: 4317 });
+  assert.equal(service.configurePort(1024).port, 1024);
+  assert.equal(service.configurePort(1024).status, 'stopped');
+  assert.equal(service.configurePort(65535).port, 65535);
+
+  const baseline = service.getState();
+  for (const port of [0, 1, 1023, 65536]) {
+    assert.throws(
+      () => service.configurePort(port),
+      error => error instanceof TypeError && error.message === 'Puerto del servicio no válido.',
+    );
+    assert.deepEqual(service.getState(), baseline);
+  }
+});

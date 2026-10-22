@@ -116,7 +116,7 @@ try {
   await sleep(900);
 
   check('Eight navigation destinations', await cdp.evaluate(`document.querySelectorAll('.nav-item').length`) === 8);
-  check('Demo scope is explicit', await cdp.evaluate(`document.body.textContent.includes('Modo demostración')&&document.body.textContent.includes('sin backend')&&document.body.innerText.includes('Simulación Fase 1 · no operativo')`));
+  check('Demo scope is explicit', await cdp.evaluate(`document.body.textContent.includes('Modo demostración')&&document.body.textContent.includes('Servicio HTTP local real')&&document.body.innerText.includes('Simulación Fase 1 · no operativo')`));
 
   await cdp.evaluate(`(()=>{const row=[...document.querySelectorAll('tr')].find(node=>node.textContent.includes('Topota'));row.querySelector('button.switch').click();return true;})()`);
   await cdp.evaluate(clickText('Biblioteca de voces'));
@@ -186,18 +186,12 @@ try {
 
   await cdp.evaluate(clickText('Ajustes'));
   await cdp.evaluate(setControl(fieldControl('Carpeta de almacenamiento', 'input'), 'C:/VoiceStudio/DemoPersistente'));
-  await cdp.evaluate(setCheckbox(`(()=>[...document.querySelectorAll('label.inline-check')].find(node=>node.textContent.includes('Iniciar servicio automáticamente')).querySelector('input'))()`, false));
-  await cdp.evaluate(clickText('Detener'));
+  check('Service controls and preferences stay disabled without Electron', await cdp.evaluate(`(()=>{const panel=document.querySelector('.screen-panel.active');const topbar=document.querySelector('.topbar');const serviceCard=[...panel.querySelectorAll('.card')].find(card=>card.querySelector('h2')?.textContent.includes('Servicio local'));const buttons=[...serviceCard.querySelectorAll('button')];const preferences=[...serviceCard.querySelectorAll('label.inline-check input')];return topbar.textContent.includes('Host no disponible')&&buttons.some(button=>button.textContent.trim()==='Iniciar'&&button.disabled)&&buttons.some(button=>button.textContent.trim()==='Reiniciar'&&button.disabled)&&buttons.some(button=>button.textContent.includes('Aplicar puerto')&&button.disabled)&&preferences.length===2&&preferences.every(input=>input.disabled);})()`));
   await sleep(850);
   await cdp.evaluate(`location.reload();true`);
   await sleep(850);
   check('General settings persist after reload', await cdp.evaluate(`${fieldControl('Carpeta de almacenamiento', 'input')}.value==='C:/VoiceStudio/DemoPersistente'`));
-  check('Disabled auto-start keeps service stopped', await cdp.evaluate(`document.querySelector('.topbar').textContent.includes('Detenido')`));
-  await cdp.evaluate(setCheckbox(`(()=>[...document.querySelectorAll('label.inline-check')].find(node=>node.textContent.includes('Iniciar servicio automáticamente')).querySelector('input'))()`, true));
-  await sleep(100);
-  await cdp.evaluate(`location.reload();true`);
-  await sleep(850);
-  check('Enabled auto-start activates simulated service on reopen', await cdp.evaluate(`document.querySelector('.topbar').textContent.includes('Activo')`));
+  check('Browser-only runner remains unavailable after reload', await cdp.evaluate(`(()=>{const topbar=document.querySelector('.topbar');const start=[...topbar.querySelectorAll('button')].find(button=>button.textContent.includes('Iniciar'));return topbar.textContent.includes('Host no disponible')&&start?.disabled;})()`));
 
   await cdp.evaluate(clickText('Historial y actividad'));
   check('History includes date filter', await cdp.evaluate(`Boolean(document.querySelector('input[type="date"]'))`));
@@ -235,13 +229,10 @@ try {
   await cdp.send('Input.dispatchKeyEvent', { type:'keyDown', key:'Escape', code:'Escape' });
 
   await cdp.evaluate(clickText('Ajustes'));
-  for (const text of ['Iniciar servicio automáticamente','Mantener servicio al cerrar']) {
-    await cdp.evaluate(`(()=>{const x=[...document.querySelectorAll('.screen-panel.active label.inline-check')].find(node=>node.textContent.includes(${js(text)})).querySelector('input');if(x.checked)x.click();return true;})()`);
-    await sleep(80);
-  }
+  await expectUI('S11: hostless browser disables service preferences', `(()=>{const panel=document.querySelector('.screen-panel.active');const topbar=document.querySelector('.topbar');const serviceCard=[...panel.querySelectorAll('.card')].find(card=>card.querySelector('h2')?.textContent.includes('Servicio local'));if(!serviceCard)return false;const buttons=[...serviceCard.querySelectorAll('button')];const preferences=[...serviceCard.querySelectorAll('label.inline-check input')];return topbar.textContent.includes('Host no disponible')&&buttons.some(button=>button.textContent.trim()==='Iniciar'&&button.disabled)&&buttons.some(button=>button.textContent.trim()==='Reiniciar'&&button.disabled)&&preferences.length===2&&preferences.every(input=>input.disabled);})()`);
   await cdp.evaluate(`location.reload();true`);
   await sleep(850);
-  await expectUI('S11: disabled close retention leaves service stopped', `document.querySelector('.topbar').innerText.includes('Detenido')`);
+  await expectUI('S11: hostless browser remains unavailable after reload', `(()=>{const topbar=document.querySelector('.topbar');const start=[...topbar.querySelectorAll('button')].find(button=>button.textContent.includes('Iniciar'));return topbar.textContent.includes('Host no disponible')&&start?.disabled;})()`);
 
   await cdp.send('Emulation.setDeviceMetricsOverride', { width:1280,height:800,deviceScaleFactor:1,mobile:false });
   await cdp.evaluate(clickText('Producción'));

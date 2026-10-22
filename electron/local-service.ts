@@ -87,6 +87,18 @@ export class LocalHttpService {
     }
   }
 
+  configurePort(port: number): ServiceSnapshot {
+    if (!Number.isInteger(port) || port < 1024 || port > 65535) {
+      throw new TypeError('Puerto del servicio no válido.');
+    }
+    if (this.status === 'starting' || this.status === 'active' || this.status === 'stopping') {
+      throw new Error('El puerto sólo puede configurarse con el servicio detenido.');
+    }
+    this.requestedPort = port;
+    this.activePort = undefined;
+    return this.getState();
+  }
+
   async restart(port = this.requestedPort): Promise<ServiceSnapshot> {
     if (!Number.isInteger(port) || port < 0 || port > 65535) {
       throw new TypeError('Puerto del servicio no válido.');

@@ -7,9 +7,13 @@
   "scripts": {
     "dev": "vite --host 127.0.0.1",
     "build": "tsc -b && npm run build:electron && vite build",
-    "build:electron": "tsc -p tsconfig.electron.json",
+    "build:electron": "tsc -p tsconfig.electron.json && vite build --config electron/vite.preload.config.ts",
     "preview": "vite preview --host 127.0.0.1",
-    "test:service": "node --test electron/*.test.ts",
+    "start:desktop": "electron .",
+    "test:service": "npm run build && node --test electron/*.test.ts",
+    "test:phase2a:preferences": "node scripts/phase2a-preferences-check.cjs",
+    "test:phase2a:startup-close": "node scripts/phase2a-startup-close-check.cjs",
+    "test:phase2a:desktop": "npm run build && node scripts/phase2a-desktop-check.mjs",
     "test:phase1": "node scripts/phase1-ui-check.mjs"
   },
   "dependencies": {
