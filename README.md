@@ -88,6 +88,18 @@ Para probarlo manualmente, ejecuta `npm run build` y `npm run start:desktop`, ab
 - **Pendientes:** salida real del host Electron durante FFmpeg (incluido ocultamiento en bandeja frente a salida efectiva) y presentación del error para vídeo sin pista de audio. La prueba del controlador no acredita el cierre del host; el rechazo de vídeo sin audio sí tiene prueba de controlador, no de interfaz.
 - El comprobador del diálogo nativo de Windows permanece bloqueado; no se declara PASS ni se vuelve a ejecutar. RDD se solicita sobre el diff exclusivo de Tarea 2 con estas limitaciones expresas, sin autorizar commit, push ni Tarea 3.
 
+## Fase 2B · Tarea 3: recortes temporales de audio
+
+Después de preparar un archivo en «Clonar voz», la sección «Recortar audio» permite escribir inicio y fin en segundos o tomar la posición del reproductor original. Muestra el intervalo y su duración; «Generar fragmento WAV» crea un recorte real y añade un reproductor HTML5 independiente. Se pueden crear varios fragmentos numerados del mismo archivo durante la sesión.
+
+El host valida números finitos, `0 ≤ inicio < fin ≤ duración`, duración conocida e identidad del archivo preparado. Solo usa su propio WAV preparado como entrada; el renderer no proporciona rutas arbitrarias de entrada ni salida. FFmpeg genera PCM de 16 bits, mono y 48 kHz; ffprobe verifica formato y duración antes de publicar. La tolerancia máxima es **50 ms** respecto de `fin − inicio`. Una operación activa por sesión; los fallos no publican parciales. Los recortes y sus procesos se invalidan y limpian al cambiar de archivo o salir; cancelar el selector conserva los recortes. Un archivo sin duración fiable no permite recortar.
+
+Para comprobarlo manualmente con el build actual: `npm run start:desktop` → «Clonar voz» → seleccionar WAV o MP4 real → esperar la preparación → marcar 0,5–1,5 s → generar y reproducir/pausar/desplazar el fragmento → repetir con otro intervalo y comprobar ambos fragmentos. Probar inicio negativo, fin fuera de duración e inicio igual o mayor que fin: el botón no debe permitir generar. Cambiar de archivo no debe mostrar fragmentos anteriores. Los originales no se modifican.
+
+Comprobaciones focalizadas de Tarea 3: `node --test electron/media-trimming.test.ts electron/media-trimming-ipc.test.ts`. El smoke `node scripts/phase2b-trim-smoke.cjs` comprueba únicamente arranque real de Electron, preload restringido, navegación en escritorio/ventana reducida y salida en reposo; no abre el selector ni acredita reproducción de fragmentos o cierre durante FFmpeg.
+
+No hay «Guardar como», exportación definitiva ni Tarea 4. El usuario confirmó PASS manual para WAV y MP4, escucha/pausa/desplazamiento, dos fragmentos independientes, cambio de fuente e intervalos inválidos; RDD de Tarea 3 está autorizado. El editor visual con forma de onda y selección arrastrable queda como backlog UX futuro, fuera de esta tarea y de sus criterios de aceptación. Las dos deudas de Tarea 2 (cierre real del host durante FFmpeg y error de vídeo sin audio en UI) siguen pendientes de validación previa a distribución: no se declaran PASS por estas pruebas de recorte.
+
 ## Evidencia del cierre
 
 Son **resultados históricos ya observados**, no pruebas nuevas de esta actualización:

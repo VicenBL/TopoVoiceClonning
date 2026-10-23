@@ -6,6 +6,7 @@ import { DesktopServiceController, resolveCloseAction } from './desktop-controll
 import { SERVICE_CHANNELS } from './service-contract.ts';
 import { registerMediaSelectionIpc } from './media-selection.ts';
 import { MediaPreparationController } from './media-preparation.ts';
+import { MediaTrimmingController } from './media-trimming.ts';
 import { registerServiceIpc } from './service-ipc.ts';
 import { isTrustedRendererUrl } from './renderer-security.ts';
 import { hideWithoutBlocking, resolveTrayIconPath, tryCreateTray } from './tray-support.ts';
@@ -26,6 +27,7 @@ let quitPromise: Promise<void> | null = null;
 let unregisterIpc: (() => void) | null = null;
 let unregisterMediaIpc: (() => void) | null = null;
 let mediaPreparation: MediaPreparationController | null = null;
+let mediaTrimming: MediaTrimmingController | null = null;
 let closePromise: Promise<void> | null = null;
 let signalInitialPreferences: (() => void) | undefined;
 const initialPreferencesReady = new Promise<void>(resolve => { signalInitialPreferences = resolve; });
@@ -121,7 +123,8 @@ async function closeWithEffectivePreferences(window: BrowserWindow): Promise<voi
 async function requestQuit(): Promise<void> {
   if (quitPromise) return quitPromise;
   quitting = true;
-  quitPromise = Promise.all([controller.shutdown(), mediaPreparation?.dispose()]).then(() => {
+  const closeMedia = async () => { await mediaTrimming?.dispose(); await mediaPreparation?.dispose(); };
+  quitPromise = Promise.all([controller.shutdown(), closeMedia()]).then(() => {
     unregisterIpc?.();
     unregisterIpc = null;
     unregisterMediaIpc?.();
@@ -147,6 +150,7 @@ if (!hasSingleInstanceLock) {
 
   void app.whenReady().then(() => {
     mediaPreparation = new MediaPreparationController({ tempRoot: app.getPath('temp') });
+    mediaTrimming = new MediaTrimmingController({ tempRoot: app.getPath('temp'), prepareSelected: () => mediaPreparation!.prepare() });
     const isTrustedSender = (event: { sender?: { id?: number }; senderFrame?: { url?: string } }) => Boolean(
       mainWindow
       && event.sender?.id === mainWindow.webContents.id
@@ -176,6 +180,7 @@ if (!hasSingleInstanceLock) {
       },
       isTrustedSender,
       mediaPreparation,
+      mediaTrimming,
     );
     createMainWindow();
   });

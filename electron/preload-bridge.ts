@@ -17,7 +17,7 @@ export function createMediaBridge(ipc: RendererIpcAdapter): MediaBridge {
   return {
     selectFile: () => ipc.invoke(MEDIA_CHANNELS.select) as Promise<Awaited<ReturnType<MediaBridge['selectFile']>>>,
     prepareSelected: () => ipc.invoke(MEDIA_CHANNELS.prepareSelected) as Promise<Awaited<ReturnType<MediaBridge['prepareSelected']>>>,
-  };
+    trimSelected: request => ipc.invoke(MEDIA_CHANNELS.trimSelected, request) as Promise<Awaited<ReturnType<MediaBridge['trimSelected']>>>,  };
 }
 
 export function createServiceBridge(ipc: RendererIpcAdapter): ServiceBridge {
