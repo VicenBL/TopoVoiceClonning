@@ -62,10 +62,14 @@ test('el puente del preload sólo expone las siete operaciones autorizadas', asy
   assert.equal(ipc.listeners.size, 0);
 });
 
-test('el puente de medios expone sólo selección sin aceptar argumentos del renderer', async () => {
+test('el puente de medios sólo expone selección y preparación sin argumentos del renderer', async () => {
   const ipc = new FakeRendererIpc();
   const bridge = createMediaBridge(ipc);
-  assert.deepEqual(Object.keys(bridge), ['selectFile']);
+  assert.deepEqual(Object.keys(bridge), ['selectFile', 'prepareSelected']);
   await bridge.selectFile();
-  assert.deepEqual(ipc.invocations, [{ channel: MEDIA_CHANNELS.select }]);
+  await bridge.prepareSelected();
+  assert.deepEqual(ipc.invocations, [
+    { channel: MEDIA_CHANNELS.select },
+    { channel: MEDIA_CHANNELS.prepareSelected },
+  ]);
 });

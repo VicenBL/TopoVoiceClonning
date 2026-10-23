@@ -5,6 +5,7 @@ import { MEDIA_CHANNELS } from './media-contract.ts';
 import { reduceMediaSelection } from '../src/media-selection.ts';
 import { assertMediaSelectionTransitions } from '../src/media-selection.test.ts';
 import { registerMediaSelectionIpc, type MediaDialogAdapter, type MediaIpcMainAdapter } from './media-selection.ts';
+import type { MediaPreparationController } from './media-preparation.ts';
 
 class FakeIpc implements MediaIpcMainAdapter {
   handlers = new Map<string, (...args: unknown[]) => unknown>();
@@ -62,6 +63,32 @@ test('cancelación devuelve null y fallo de diálogo se propaga', async () => {
 
 test('selección, cancelación y fallo mantienen las transiciones esperadas en la interfaz', () => {
   assertMediaSelectionTransitions(reduceMediaSelection);
+});
+
+test('preparación IPC es argument-free, conserva la selección del main y valida origen', async () => {
+  const selected: string[] = [];
+  let prepared = 0;
+  const preparation = {
+    select: async (path: string | null) => { if (path) selected.push(path); return Boolean(path); },
+    prepare: async () => { prepared += 1; return { url: 'file:///private/prepared.wav', durationSec: 1 }; },
+  } as unknown as MediaPreparationController;
+  const ipc = new FakeIpc();
+  const selection = registerMediaSelectionIpc(
+    ipc,
+    { showOpenDialog: async () => ({ canceled: false, filePaths: ['C:\\Voz con espacios é % #.wav'] }) },
+    () => ({}),
+    event => event.sender?.id === 42 && event.senderFrame?.url === 'file:///app/index.html',
+    preparation,
+  );
+  const event = { sender: { id: 42 }, senderFrame: { url: 'file:///app/index.html' } };
+  assert.deepEqual(await ipc.handlers.get(MEDIA_CHANNELS.select)!(event), { name: 'Voz con espacios é % #.wav', path: 'C:\\Voz con espacios é % #.wav' });
+  assert.deepEqual(selected, ['C:\\Voz con espacios é % #.wav']);
+  await assert.rejects(() => ipc.handlers.get(MEDIA_CHANNELS.prepareSelected)!({ sender: { id: 9 } }), /Emisor IPC no autorizado\./);
+  await assert.rejects(() => ipc.handlers.get(MEDIA_CHANNELS.prepareSelected)!(event, 'C:\\forbidden.wav'), /Argumentos IPC no permitidos\./);
+  assert.deepEqual(await ipc.handlers.get(MEDIA_CHANNELS.prepareSelected)!(event), { url: 'file:///private/prepared.wav', durationSec: 1 });
+  assert.equal(prepared, 1);
+  selection();
+  assert.deepEqual(ipc.removed, [MEDIA_CHANNELS.select, MEDIA_CHANNELS.prepareSelected]);
 });
 
 test('invocaciones concurrentes comparten un único diálogo', async () => {

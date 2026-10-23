@@ -75,9 +75,18 @@ También existen dos modos directos de los scripts:
 
 Las comprobaciones nativas requieren Windows con sesión de escritorio activa; el smoke desktop espera el puerto `4317` libre. Las suites utilizan perfiles y temporales aislados. `test:phase1` genera el informe `artifacts/phase1-ui-check.json` y capturas; no debe ejecutarse sólo para actualizar la documentación. El entorno de pruebas registrado utilizó Node.js 24.
 
-## Fase 2B · Tarea 1: seleccionar archivo local
+## Fase 2B · Tarea 2: preparar y reproducir audio local
 
-En «Clonar voz», la tarjeta «Archivo local · selección real» abre el selector nativo para elegir un archivo de audio o vídeo. Cancelar conserva la selección y el error previos. Esta tarea sólo muestra el nombre y la ruta; no reproduce, procesa ni guarda el medio y no cambia los controles demo existentes. Para comprobarlo, abre Voice Studio, entra en «Clonar voz» y pulsa «Seleccionar archivo»; el archivo aparecerá en esa tarjeta. La Tarea 2 sigue sin autorizar.
+En «Clonar voz», la tarjeta «Archivo local · selección real» permite seleccionar audio o vídeo local. Voice Studio usa `ffprobe` para comprobar la pista de audio y leer la duración cuando existe; después usa `ffmpeg` para crear un WAV temporal PCM mono a 48 kHz, sin modificar el original. Las herramientas `ffprobe` y `ffmpeg` deben estar disponibles en `PATH`. El reproductor HTML5 ofrece reproducción, pausa, posición, duración y desplazamiento temporal. Cancelar el selector conserva el archivo previo; al confirmar otro archivo, Voice Studio libera el reproductor anterior antes de retirar su temporal. Los temporales se eliminan al sustituir el medio o salir de la aplicación.
+
+Para probarlo manualmente, ejecuta `npm run build` y `npm run start:desktop`, abre «Clonar voz» y selecciona primero un WAV pequeño y después un vídeo pequeño con audio. Espera a que desaparezca «Preparando audio…», pulsa reproducir y pausa, comprueba que avanza la posición y mueve la barra de búsqueda. También puedes probar un archivo corrupto o un vídeo sin audio: deben mostrar un error, nunca un reproductor válido. La tarea está pensada inicialmente para archivos pequeños; cada operación FFmpeg tiene un límite de 60 segundos y los archivos mayores pueden requerir un tratamiento posterior. No se exporta WAV ni se altera el archivo de entrada.
+
+### Evidencias y límites de verificación de Tarea 2
+
+- Validación humana: MP4 y WAV reales reproducen, pausan y permiten desplazamiento temporal; WAV corrupto muestra error sin reproductor válido.
+- Evidencia previa reutilizada, no repetida: build PASS; suite focalizada independiente 18/18 PASS (incluye un archivo auxiliar como subtest); regresiones de concurrencia 3/3 PASS; FFmpeg real cancelado tras escribir un parcial, con cierre esperado del hijo, limpieza y sin publicar el resultado, a nivel del controlador.
+- **Pendientes:** salida real del host Electron durante FFmpeg (incluido ocultamiento en bandeja frente a salida efectiva) y presentación del error para vídeo sin pista de audio. La prueba del controlador no acredita el cierre del host; el rechazo de vídeo sin audio sí tiene prueba de controlador, no de interfaz.
+- El comprobador del diálogo nativo de Windows permanece bloqueado; no se declara PASS ni se vuelve a ejecutar. RDD se solicita sobre el diff exclusivo de Tarea 2 con estas limitaciones expresas, sin autorizar commit, push ni Tarea 3.
 
 ## Evidencia del cierre
 

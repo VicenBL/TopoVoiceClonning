@@ -1,6 +1,7 @@
 import { basename } from 'node:path';
 
 import { MEDIA_CHANNELS, type SelectedMediaFile } from './media-contract.ts';
+import type { MediaPreparationController } from './media-preparation.ts';
 
 export interface MediaIpcMainAdapter {
   handle(channel: string, listener: (...args: unknown[]) => unknown): void;
@@ -34,6 +35,7 @@ export function registerMediaSelectionIpc(
   dialog: MediaDialogAdapter,
   getOwner: () => unknown,
   isTrustedSender: (event: MediaIpcEvent) => boolean,
+  preparation?: MediaPreparationController,
 ): () => void {
   let pending: Promise<SelectedMediaFile | null> | null = null;
   ipcMain.handle(MEDIA_CHANNELS.select, async (rawEvent, ...args) => {
@@ -43,16 +45,28 @@ export function registerMediaSelectionIpc(
     if (args.length !== 0) throw new Error('Argumentos IPC no permitidos.');
     if (pending) return pending;
 
-    pending = dialog.showOpenDialog(getOwner(), dialogOptions).then(result => {
+    pending = dialog.showOpenDialog(getOwner(), dialogOptions).then(async result => {
       const path = result.filePaths[0];
-      return result.canceled || !path ? null : { name: basename(path), path };
+      if (result.canceled || !path) return null;
+      await preparation?.select(path);
+      return { name: basename(path), path };
     }).finally(() => { pending = null; });
     return pending;
   });
+  if (preparation) {
+    ipcMain.handle(MEDIA_CHANNELS.prepareSelected, async (rawEvent, ...args) => {
+      if (!rawEvent || typeof rawEvent !== 'object' || !isTrustedSender(rawEvent as MediaIpcEvent)) {
+        throw new Error('Emisor IPC no autorizado.');
+      }
+      if (args.length !== 0) throw new Error('Argumentos IPC no permitidos.');
+      return preparation.prepare();
+    });
+  }
   let registered = true;
   return () => {
     if (!registered) return;
     registered = false;
     ipcMain.removeHandler(MEDIA_CHANNELS.select);
+    if (preparation) ipcMain.removeHandler(MEDIA_CHANNELS.prepareSelected);
   };
 }

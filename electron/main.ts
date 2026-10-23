@@ -5,6 +5,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { DesktopServiceController, resolveCloseAction } from './desktop-controller.ts';
 import { SERVICE_CHANNELS } from './service-contract.ts';
 import { registerMediaSelectionIpc } from './media-selection.ts';
+import { MediaPreparationController } from './media-preparation.ts';
 import { registerServiceIpc } from './service-ipc.ts';
 import { isTrustedRendererUrl } from './renderer-security.ts';
 import { hideWithoutBlocking, resolveTrayIconPath, tryCreateTray } from './tray-support.ts';
@@ -24,6 +25,7 @@ let quitting = false;
 let quitPromise: Promise<void> | null = null;
 let unregisterIpc: (() => void) | null = null;
 let unregisterMediaIpc: (() => void) | null = null;
+let mediaPreparation: MediaPreparationController | null = null;
 let closePromise: Promise<void> | null = null;
 let signalInitialPreferences: (() => void) | undefined;
 const initialPreferencesReady = new Promise<void>(resolve => { signalInitialPreferences = resolve; });
@@ -119,7 +121,7 @@ async function closeWithEffectivePreferences(window: BrowserWindow): Promise<voi
 async function requestQuit(): Promise<void> {
   if (quitPromise) return quitPromise;
   quitting = true;
-  quitPromise = controller.shutdown().then(() => {
+  quitPromise = Promise.all([controller.shutdown(), mediaPreparation?.dispose()]).then(() => {
     unregisterIpc?.();
     unregisterIpc = null;
     unregisterMediaIpc?.();
@@ -144,6 +146,7 @@ if (!hasSingleInstanceLock) {
   app.on('activate', showMainWindow);
 
   void app.whenReady().then(() => {
+    mediaPreparation = new MediaPreparationController({ tempRoot: app.getPath('temp') });
     const isTrustedSender = (event: { sender?: { id?: number }; senderFrame?: { url?: string } }) => Boolean(
       mainWindow
       && event.sender?.id === mainWindow.webContents.id
@@ -172,6 +175,7 @@ if (!hasSingleInstanceLock) {
         return mainWindow;
       },
       isTrustedSender,
+      mediaPreparation,
     );
     createMainWindow();
   });

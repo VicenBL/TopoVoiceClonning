@@ -16,6 +16,7 @@ export interface RendererIpcAdapter {
 export function createMediaBridge(ipc: RendererIpcAdapter): MediaBridge {
   return {
     selectFile: () => ipc.invoke(MEDIA_CHANNELS.select) as Promise<Awaited<ReturnType<MediaBridge['selectFile']>>>,
+    prepareSelected: () => ipc.invoke(MEDIA_CHANNELS.prepareSelected) as Promise<Awaited<ReturnType<MediaBridge['prepareSelected']>>>,
   };
 }
 
