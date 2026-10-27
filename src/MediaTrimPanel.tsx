@@ -27,6 +27,39 @@ function FragmentPlayer({ clip, disabled }: { clip: TrimmedMediaFile; disabled: 
   </>;
 }
 
+function SaveFragment({ id, number, disabled }: { id: string; number: number; disabled: boolean }) {
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const pending = useRef(false);
+  const mounted = useRef(true);
+  const disabledRef = useRef(disabled);
+  disabledRef.current = disabled;
+  useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
+  const save = async () => {
+    if (disabled || pending.current) return;
+    pending.current = true; setBusy(true); setMessage(null); setError(null);
+    try {
+      const bridge = window.voiceStudio?.media;
+      if (!bridge) throw new Error('El host de escritorio no está disponible.');
+      const result = await bridge.saveWav(id);
+      if (result && mounted.current && !disabledRef.current) {
+        setMessage(`WAV guardado: ${result.path}${result.warning ? ` · ${result.warning}` : ''}`);
+      }
+    } catch (failure) {
+      if (mounted.current && !disabledRef.current) setError(failure instanceof Error ? failure.message : 'No se pudo guardar el WAV.');
+    } finally {
+      pending.current = false;
+      if (mounted.current) setBusy(false);
+    }
+  };
+  return <div>
+    <button className="btn" aria-label={`Guardar WAV del fragmento ${number}`} disabled={disabled || busy} onClick={() => void save()}>{busy ? 'Guardando WAV…' : 'Guardar WAV'}</button>
+    {message && <p role="status">{message}</p>}
+    {error && <p role="alert" className="compat warn">{error}</p>}
+  </div>;
+}
+
 export function MediaTrimPanel({ sourceUrl, durationSec, sourceName, sourceAudio, disabled }: Props) {
   const [start, setStart] = useState('0');
   const [end, setEnd] = useState(durationSec?.toString() ?? '');
@@ -86,7 +119,8 @@ export function MediaTrimPanel({ sourceUrl, durationSec, sourceName, sourceAudio
       <strong>Fragmento {index + 1} · {sourceName}</strong>
       <p className="muted">{clip.startSec.toFixed(3)}–{clip.endSec.toFixed(3)} s · duración real {clip.durationSec.toFixed(3)} s · PCM 16 bits, mono, 48 kHz</p>
       <FragmentPlayer clip={clip} disabled={disabled} />
+      <SaveFragment id={clip.id} number={index + 1} disabled={disabled} />
     </div>)}
-    <p className="muted">Fragmentos temporales de esta sesión. Tolerancia de duración: 50 ms. Se eliminan al cambiar de archivo o salir. Sin exportación definitiva.</p>
+    <p className="muted">Fragmentos temporales de esta sesión. Tolerancia de duración: 50 ms. Se eliminan al cambiar de archivo o salir; los WAV guardados permanecen en tu PC. Guardar WAV copia el fragmento sin recodificar y nunca reemplaza un archivo existente.</p>
   </section>;
 }

@@ -7,6 +7,7 @@ import { SERVICE_CHANNELS } from './service-contract.ts';
 import { registerMediaSelectionIpc } from './media-selection.ts';
 import { MediaPreparationController } from './media-preparation.ts';
 import { MediaTrimmingController } from './media-trimming.ts';
+import { MediaExportController } from './media-exporting.ts';
 import { registerServiceIpc } from './service-ipc.ts';
 import { isTrustedRendererUrl } from './renderer-security.ts';
 import { hideWithoutBlocking, resolveTrayIconPath, tryCreateTray } from './tray-support.ts';
@@ -28,6 +29,7 @@ let unregisterIpc: (() => void) | null = null;
 let unregisterMediaIpc: (() => void) | null = null;
 let mediaPreparation: MediaPreparationController | null = null;
 let mediaTrimming: MediaTrimmingController | null = null;
+let mediaExporting: MediaExportController | null = null;
 let closePromise: Promise<void> | null = null;
 let signalInitialPreferences: (() => void) | undefined;
 const initialPreferencesReady = new Promise<void>(resolve => { signalInitialPreferences = resolve; });
@@ -123,7 +125,7 @@ async function closeWithEffectivePreferences(window: BrowserWindow): Promise<voi
 async function requestQuit(): Promise<void> {
   if (quitPromise) return quitPromise;
   quitting = true;
-  const closeMedia = async () => { await mediaTrimming?.dispose(); await mediaPreparation?.dispose(); };
+  const closeMedia = async () => { await mediaExporting?.dispose(); await mediaTrimming?.dispose(); await mediaPreparation?.dispose(); };
   quitPromise = Promise.all([controller.shutdown(), closeMedia()]).then(() => {
     unregisterIpc?.();
     unregisterIpc = null;
@@ -151,6 +153,11 @@ if (!hasSingleInstanceLock) {
   void app.whenReady().then(() => {
     mediaPreparation = new MediaPreparationController({ tempRoot: app.getPath('temp') });
     mediaTrimming = new MediaTrimmingController({ tempRoot: app.getPath('temp'), prepareSelected: () => mediaPreparation!.prepare() });
+    const getMediaOwner = () => {
+      if (!mainWindow || mainWindow.isDestroyed()) throw new Error('La ventana principal no está disponible.');
+      return mainWindow;
+    };
+    mediaExporting = new MediaExportController({ showSaveDialog: options => dialog.showSaveDialog(getMediaOwner(), options) });
     const isTrustedSender = (event: { sender?: { id?: number }; senderFrame?: { url?: string } }) => Boolean(
       mainWindow
       && event.sender?.id === mainWindow.webContents.id
@@ -174,13 +181,11 @@ if (!hasSingleInstanceLock) {
     unregisterMediaIpc = registerMediaSelectionIpc(
       ipcMain,
       { showOpenDialog: (owner, options) => dialog.showOpenDialog(owner as BrowserWindow, options) },
-      () => {
-        if (!mainWindow || mainWindow.isDestroyed()) throw new Error('La ventana principal no está disponible.');
-        return mainWindow;
-      },
+      getMediaOwner,
       isTrustedSender,
       mediaPreparation,
       mediaTrimming,
+      mediaExporting,
     );
     createMainWindow();
   });

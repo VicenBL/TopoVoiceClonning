@@ -58,7 +58,8 @@
     await new Promise((done, reject) => { socket.addEventListener('open', done, { once: true }); socket.addEventListener('error', reject, { once: true }); });
     await until(() => evaluate('Boolean(window.voiceStudio?.media?.trimSelected)'), 'trim preload');
     const keys = await evaluate('Object.keys(window.voiceStudio.media).sort()');
-    assert.deepEqual(keys, ['prepareSelected', 'selectFile', 'trimSelected']);
+    assert.deepEqual(keys, ['prepareSelected', 'saveWav', 'selectFile', 'trimSelected']);
+    assert.match(await evaluate(`window.voiceStudio.media.saveWav('id-inexistente').then(()=> 'éxito inesperado', error=>error.message)`), /fragmento.*selección/i);
     await evaluate('window.voiceStudio.service.configure({port:4317,autoStart:false,keepRunningOnClose:false})');
     for (const [width, height] of [[1440, 900], [1024, 768]]) {
       await command('Emulation.setDeviceMetricsOverride', { width, height, deviceScaleFactor: 1, mobile: false });
@@ -72,7 +73,7 @@
     await evaluate('setTimeout(()=>window.close(),50);true');
     const outcome = await Promise.race([exit, delay(10000).then(() => { throw new Error('Electron idle exit timed out'); })]);
     assert.equal(outcome.code, 0, JSON.stringify(outcome));
-    console.log(JSON.stringify({ result: 'PASS', proof: 'real Electron boot, restricted trim preload, navigation at 1440x900 and 1024x768, idle host exit', nativeSelectorInvoked: false, trimmingPlaybackVerified: false, ffmpegShutdownVerified: false }, null, 2));
+    console.log(JSON.stringify({ result: 'PASS', proof: 'real Electron boot, restricted trim/save preload, invalid fragment rejected without dialog, navigation at 1440x900 and 1024x768, idle host exit', nativeSelectorInvoked: false, trimmingPlaybackVerified: false, ffmpegShutdownVerified: false }, null, 2));
   } catch (error) {
     console.error(error.stack || error);
     process.exitCode = 1;

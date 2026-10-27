@@ -100,6 +100,20 @@ Comprobaciones focalizadas de Tarea 3: `node --test electron/media-trimming.test
 
 No hay «Guardar como», exportación definitiva ni Tarea 4. El usuario confirmó PASS manual para WAV y MP4, escucha/pausa/desplazamiento, dos fragmentos independientes, cambio de fuente e intervalos inválidos; RDD de Tarea 3 está autorizado. El editor visual con forma de onda y selección arrastrable queda como backlog UX futuro, fuera de esta tarea y de sus criterios de aceptación. Las dos deudas de Tarea 2 (cierre real del host durante FFmpeg y error de vídeo sin audio en UI) siguen pendientes de validación previa a distribución: no se declaran PASS por estas pruebas de recorte.
 
+## Fase 2B · Tarea 4: Guardar WAV
+
+Cada fragmento generado ofrece **Guardar WAV**. Abre el diálogo nativo «Guardar como» y propone `<archivo-original>-fragmento-<número>.wav`. Elegí una carpeta y un nombre nuevo: el guardado copia exactamente los bytes del WAV ya validado, sin FFmpeg ni recodificación. Los WAV guardados permanecen después de cambiar de archivo o cerrar Voice Studio.
+
+**Política elegida por el usuario:** nunca se reemplaza un destino existente, incluido el original. Aunque el diálogo de Windows confirme una ruta existente, main la rechazará y pedirá otro nombre. Cancelar no crea archivos ni muestra éxito. Se confirma el destino solo después de publicar la copia completa; los errores se muestran junto al fragmento.
+
+Main registra los identificadores, nombres y hashes de los fragmentos vigentes. El renderer solo envía el ID, no rutas de entrada/salida. Se copia a un temporal hermano, se comprueba SHA-256 y se publica mediante enlace duro exclusivo: un archivo que aparezca durante el guardado tampoco se sobrescribe. Usá preferentemente un disco NTFS local; si la unidad no admite esta publicación segura, se informa un error sin copiar directamente a un destino parcial. Si falla retirar el temporal después de guardar correctamente, la confirmación lo advierte. El cambio de selección o cierre cancela lo pendiente antes de publicar; una publicación atómica ya iniciada termina antes de retirar la fuente.
+
+Pruebas focalizadas: `node --test electron/media-exporting.test.ts electron/media-exporting-ipc.test.ts`. El smoke existente `node scripts/phase2b-trim-smoke.cjs` incluye el nuevo puente y el rechazo de un ID inexistente, sin abrir diálogos; no demuestra guardado manual ni escucha en un reproductor externo.
+
+**Prueba manual pendiente:** preparar MP4 → generar dos fragmentos → Guardar WAV con nombres distintos → abrirlos fuera de Voice Studio → cancelar otro guardado → elegir un WAV existente y comprobar rechazo sin cambios. Para un error real, elegir una carpeta sin permiso de escritura. RDD queda pendiente de esta confirmación humana; no hay commit ni push de Tarea 4.
+
+No se añade biblioteca persistente ni editor visual (sigue en backlog UX), ni nuevos motores. Las dos deudas de Tarea 2 siguen **NO PASS, pendientes antes de distribución**: salida real de Electron durante FFmpeg y error visible para vídeo sin audio.
+
 ## Evidencia del cierre
 
 Son **resultados históricos ya observados**, no pruebas nuevas de esta actualización:

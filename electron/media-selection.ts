@@ -3,6 +3,7 @@ import { basename } from 'node:path';
 import { MEDIA_CHANNELS, type SelectedMediaFile } from './media-contract.ts';
 import type { MediaPreparationController } from './media-preparation.ts';
 import { validateTrimRequest, type MediaTrimmingController } from './media-trimming.ts';
+import { validateExportId, type MediaExportController } from './media-exporting.ts';
 
 export interface MediaIpcMainAdapter {
   handle(channel: string, listener: (...args: unknown[]) => unknown): void;
@@ -38,7 +39,9 @@ export function registerMediaSelectionIpc(
   isTrustedSender: (event: MediaIpcEvent) => boolean,
   preparation?: MediaPreparationController,
   trimming?: MediaTrimmingController,
+  exporting?: MediaExportController,
 ): () => void {
+  let selectedName = '';
   let pending: Promise<SelectedMediaFile | null> | null = null;
   ipcMain.handle(MEDIA_CHANNELS.select, async (rawEvent, ...args) => {
     if (!rawEvent || typeof rawEvent !== 'object' || !isTrustedSender(rawEvent as MediaIpcEvent)) {
@@ -50,8 +53,10 @@ export function registerMediaSelectionIpc(
     pending = dialog.showOpenDialog(getOwner(), dialogOptions).then(async result => {
       const path = result.filePaths[0];
       if (result.canceled || !path) return null;
+      await exporting?.reset();
       await trimming?.reset();
       await preparation?.select(path);
+      selectedName = basename(path);
       return { name: basename(path), path };
     }).finally(() => { pending = null; });
     return pending;
@@ -71,7 +76,15 @@ export function registerMediaSelectionIpc(
         throw new Error('Emisor IPC no autorizado.');
       }
       if (args.length !== 1) throw new Error('Argumentos IPC no permitidos.');
-      return trimming.trim(validateTrimRequest(args[0]));
+      const request = validateTrimRequest(args[0]);
+      return exporting ? exporting.trackTrim(() => trimming.trim(request), selectedName) : trimming.trim(request);
+    });
+  }
+  if (exporting) {
+    ipcMain.handle(MEDIA_CHANNELS.saveWav, async (rawEvent, ...args) => {
+      if (!rawEvent || typeof rawEvent !== 'object' || !isTrustedSender(rawEvent as MediaIpcEvent)) throw new Error('Emisor IPC no autorizado.');
+      if (args.length !== 1) throw new Error('Argumentos IPC no permitidos.');
+      return exporting.save(validateExportId(args[0]));
     });
   }
   let registered = true;
@@ -81,5 +94,6 @@ export function registerMediaSelectionIpc(
     ipcMain.removeHandler(MEDIA_CHANNELS.select);
     if (preparation) ipcMain.removeHandler(MEDIA_CHANNELS.prepareSelected);
     if (trimming) ipcMain.removeHandler(MEDIA_CHANNELS.trimSelected);
+    if (exporting) ipcMain.removeHandler(MEDIA_CHANNELS.saveWav);
   };
 }
